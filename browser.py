@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
 
     def update_title(self):
         title = self.browser.page().title()
-        self.setWindowTitle("%s - MooseAche" % title)
+        self.setWindowTitle("%s - eSearch" % title)
 
 
     def open_file(self):
