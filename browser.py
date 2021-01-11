@@ -11,12 +11,14 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        self.browser = QWebEngineView()
-        self.browser.setUrl(QUrl("http://google.com"))
+        self.tabs = QTabWidget()
+        self.tabs.setDocumentMode(True)
+        self.tabs.tabBarDoubleClicked.connect(self.tab_open_doubleclick)
+        self.tabs.currentChanged.connect(self.current_tab_changed)
+        self.tabs.setTabsClosable(True)
+        self.tabs.tabCloseRequested.connect(self.close_current_tab)
 
-        self.browser.urlChanged.connect(self.update_urlbar)
-        self.browser.loadFinished.connect(self.update_title)
-        self.setCentralWidget(self.browser)
+        self.setCentralWidget(self.tabs)
 
         self.status = QStatusBar()
         self.setStatusBar(self.status)
@@ -27,17 +29,17 @@ class MainWindow(QMainWindow):
 
         back_btn = QAction(QIcon(os.path.join('images', 'arrow-180.png')), "Back", self)
         back_btn.setStatusTip("Back to previous page")
-        back_btn.triggered.connect(self.browser.back)
+        back_btn.triggered.connect(lambda: self.tabs.currentWidget().back())
         navtb.addAction(back_btn)
 
         next_btn = QAction(QIcon(os.path.join('images', 'arrow-000.png')), "Forward", self)
         next_btn.setStatusTip("Forward to next page")
-        next_btn.triggered.connect(self.browser.forward)
+        next_btn.triggered.connect(lambda: self.tabs.currentWidget().forward())
         navtb.addAction(next_btn)
 
         reload_btn = QAction(QIcon(os.path.join('images', 'arrow-circle-315.png')), "Reload", self)
         reload_btn.setStatusTip("Reload page")
-        reload_btn.triggered.connect(self.browser.reload)
+        reload_btn.triggered.connect(lambda: self.tabs.currentWidget().reload())
         navtb.addAction(reload_btn)
 
         home_btn = QAction(QIcon(os.path.join('images', 'home.png')), "Home", self)
@@ -57,18 +59,86 @@ class MainWindow(QMainWindow):
 
         stop_btn = QAction(QIcon(os.path.join('images', 'cross-circle.png')), "Stop", self)
         stop_btn.setStatusTip("Stop loading current page")
-        stop_btn.triggered.connect(self.browser.stop)
+        stop_btn.triggered.connect(lambda: self.tabs.currentWidget().stop())
         navtb.addAction(stop_btn)
 
+        # Uncomment to disable native menubar on Mac
+        # self.menuBar().setNativeMenuBar(False)
+
+        file_menu = self.menuBar().addMenu("&File")
+
+        new_tab_action = QAction(QIcon(os.path.join('images', 'ui-tab--plus.png')), "New Tab", self)
+        new_tab_action.setStatusTip("Open a new tab")
+        new_tab_action.triggered.connect(lambda _: self.add_new_tab())
+        file_menu.addAction(new_tab_action)
+
+        open_file_action = QAction(QIcon(os.path.join('images', 'disk--arrow.png')), "Open file...", self)
+        open_file_action.setStatusTip("Open from file")
+        open_file_action.triggered.connect(self.open_file)
+        file_menu.addAction(open_file_action)
+
+        save_file_action = QAction(QIcon(os.path.join('images', 'disk--pencil.png')), "Save Page As...", self)
+        save_file_action.setStatusTip("Save current page to file")
+        save_file_action.triggered.connect(self.save_file)
+        file_menu.addAction(save_file_action)
+
+        print_action = QAction(QIcon(os.path.join('images', 'printer.png')), "Print...", self)
+        print_action.setStatusTip("Print current page")
+        print_action.triggered.connect(self.print_page)
+        file_menu.addAction(print_action)
+        
+        self.add_new_tab(QUrl('http://www.google.com'), 'Homepage')
 
         self.show()
 
+        self.setWindowTitle("eSearch")
         self.setWindowIcon(QIcon(os.path.join('images', 'ma-icon-64.png')))
 
-    def update_title(self):
-        title = self.browser.page().title()
+    def add_new_tab(self, qurl=None, label="Blank"):
+
+        if qurl is None:
+            qurl = QUrl('')
+
+        browser = QWebEngineView()
+        browser.setUrl(qurl)
+        i = self.tabs.addTab(browser, label)
+
+        self.tabs.setCurrentIndex(i)
+
+        # More difficult! We only want to update the url when it's from the
+        # correct tab
+        browser.urlChanged.connect(lambda qurl, browser=browser:
+                                   self.update_urlbar(qurl, browser))
+
+        browser.loadFinished.connect(lambda _, i=i, browser=browser:
+                                     self.tabs.setTabText(i, browser.page().title()))
+
+    def tab_open_doubleclick(self, i):
+        if i == -1:  # No tab under the click
+            self.add_new_tab()
+
+    def current_tab_changed(self, i):
+        qurl = self.tabs.currentWidget().url()
+        self.update_urlbar(qurl, self.tabs.currentWidget())
+        self.update_title(self.tabs.currentWidget())
+
+    def close_current_tab(self, i):
+        if self.tabs.count() < 2:
+            return
+
+        self.tabs.removeTab(i)
+
+    def update_title(self, browser):
+        if browser != self.tabs.currentWidget():
+            # If this signal is not from the current tab, ignore
+            return
+
+        title = self.tabs.currentWidget().page().title()
         self.setWindowTitle("%s - eSearch" % title)
 
+
+    def about(self):
+        pass
 
     def open_file(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Open file", "",
@@ -79,7 +149,7 @@ class MainWindow(QMainWindow):
             with open(filename, 'r') as f:
                 html = f.read()
 
-            self.browser.setHtml(html)
+            self.tabs.currentWidget().setHtml(html)
             self.urlbar.setText(filename)
 
     def save_file(self):
@@ -88,9 +158,9 @@ class MainWindow(QMainWindow):
                                                   "All files (*.*)")
 
         if filename:
-            html = self.browser.page().toHtml()
+            html = self.tabs.currentWidget().page().toHtml()
             with open(filename, 'w') as f:
-                f.write(html)
+                f.write(html.encode('utf8'))
 
     def print_page(self):
         dlg = QPrintPreviewDialog()
@@ -98,16 +168,20 @@ class MainWindow(QMainWindow):
         dlg.exec_()
 
     def navigate_home(self):
-        self.browser.setUrl(QUrl("http://www.google.com"))
+        self.tabs.currentWidget().setUrl(QUrl("http://www.google.com"))
 
     def navigate_to_url(self):  # Does not receive the Url
         q = QUrl(self.urlbar.text())
         if q.scheme() == "":
             q.setScheme("http")
 
-        self.browser.setUrl(q)
+        self.tabs.currentWidget().setUrl(q)
 
-    def update_urlbar(self, q):
+    def update_urlbar(self, q, browser=None):
+
+        if browser != self.tabs.currentWidget():
+            # If this signal is not from the current tab, ignore
+            return
 
         if q.scheme() == 'https':
             # Secure padlock icon
