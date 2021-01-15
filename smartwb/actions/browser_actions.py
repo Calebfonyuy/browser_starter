@@ -3,7 +3,7 @@ import sys
 
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
-from PyQt5.QtWidgets import QTabWidget
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
 #from .. import settings
@@ -22,13 +22,11 @@ class BrowserProvider:
 
         self.__window = window
         self.__urlbar = urlbar
+        self.__urlbar.returnPressed.connect(lambda : self.navigate_to_url(self.urlbar.text()))
         self.__create_tab_widget()
-        self.create_new_tab()
+        self.create_new_tab(QUrl('http://www.google.com'), 'Homepage')
     
     def __create_tab_widget(self):
-        if self.__tabview is not None:
-            return
-        
         tabview = QTabWidget()
         tabview.setDocumentMode(True)
         tabview.setTabsClosable(True)
@@ -39,32 +37,41 @@ class BrowserProvider:
         self.__tabview = tabview
     
     def create_new_tab(self, url=None, label="New Tab"):
-        if url is None:
+        if not url:
             url = QUrl('')
         elif type(url) is str:
             url = QUrl(url)
-        else:
-            if type(url) is not QUrl:
+        elif type(url) is not QUrl:
                 raise Exception("Url should be a string or instance of QUrl")
         
         browser = QWebEngineView()
         browser.setUrl(url)
-        index = self.__tabview.tabs.addTab(browser, label)
-        self.__tabview.setCurrentIndex(i)
+        index = self.__tabview.addTab(browser, label)
+        self.__tabview.setCurrentIndex(index)
 
-        browser.urlChanged.connect(lambda url, browser=browser: self.__update_url_bar(url, browser))
-        browser.loadFinished.connect(lambda index=index, browser=browser: self.__update_load_finished(index, browser))
+        browser.urlChanged.connect(lambda url: self.__update_url_bar(url, browser))
+        browser.loadFinished.connect(lambda : self.__update_load_finished(index, browser))
 
     def __update_load_finished(self, index, browser):
         self.__tabview.setTabText(index, browser.page().title())
+        self.__update_window_title(browser.page().title())
 
     def __update_url_bar(self, url, browser):
         if browser != self.__tabview.currentWidget():
             return
         
         # TODO: Update window http icon
+        """
+        if q.scheme() == 'https':
+            # Secure padlock icon
+            self.httpsicon.setPixmap(QPixmap(os.path.join('images', 'lock-ssl.png')))
 
-        self.__urlbar.setText(q.toString())
+        else:
+            # Insecure padlock icon
+            self.httpsicon.setPixmap(QPixmap(os.path.join('images', 'lock-nossl.png')))
+        """
+
+        self.__urlbar.setText(url.toString())
         self.__urlbar.setCursorPosition(0)
     
     def __on_add_tab(self, i):
@@ -72,7 +79,7 @@ class BrowserProvider:
             self.create_new_tab()
     
     def __on_tab_changed(self,i):
-        browser = self.tabls.currentWidget()
+        browser = self.__tabview.currentWidget()
         self.__update_url_bar(browser.url(), browser)
         self.__window.setWindowTitle(browser.page().title())
 
@@ -80,6 +87,9 @@ class BrowserProvider:
         if self.__tabview.count() < 2:
             return
         self.__tabview.removeTab(i)
+
+    def __update_window_title(self, title):
+        self.__window.setWindowTitle("%s - SmartWb" % title)
 
     def get_widget(self):
         return self.__tabview
@@ -126,16 +136,20 @@ class BrowserProvider:
 
 
 
-class BrowserControlProvider:
+class ControlProvider:
     """
     This class provides various navigation controls required by 
     a basic browser window: Print, Save etc
     """
-    def __init__(self, window):
+    def __init__(self, window, browser_provider):
         if not issubclass(type(window), QMainWindow):
             raise Exception("window object must be of type QMainWindow")
 
+        if type(browser_provider) is not BrowserProvider:
+            raise Exception("browser_provider object must be of type BrowserProvider")
+
         self.__window = window
+        self.__bprovider = browser_provider
 
     def open_file(self):
         filename, _ = filename, _ = QFileDialog.getOpenFileName(self.window, "Open file", "",
@@ -149,5 +163,8 @@ class BrowserControlProvider:
         with open(filename, 'w') as f:
             f.write(file_data.encode('utf8'))    
 
-
+    def print_page(self, browser):
+        dlg = QPrintPreviewDialog()
+        dlg.paintRequested.connect(self.__bprovider.get_current_browser().print_)
+        dlg.exec_()
 

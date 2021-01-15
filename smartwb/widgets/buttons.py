@@ -1,4 +1,9 @@
+import os
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import QObject
+from PyQt5.QtGui import QIcon
+
+image_location = "./images"
 
 
 class ButtonProvider:
@@ -11,7 +16,7 @@ class ButtonProvider:
     be connected
     """
     def __init__(self, parent):
-        if not (type(parent) issubclass QtObject):
+        if not issubclass(type(parent) , QObject):
             raise Exception("Parent attribute must be subclass of QtObject")
         self.parent = parent
         
@@ -30,7 +35,7 @@ class ButtonProvider:
     
     def get_back_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'arrow-180.png')),
+            QIcon(os.path.join(image_location, 'arrow-180.png')),
             "Back",
             "Back to previous page",
             slot
@@ -38,7 +43,7 @@ class ButtonProvider:
     
     def get_next_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'arrow-000.png')),
+            QIcon(os.path.join(image_location, 'arrow-000.png')),
             "Forward",
             "Forward to next page",
             slot
@@ -46,7 +51,7 @@ class ButtonProvider:
     
     def get_reload_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'arrow-circle-315.png')),
+            QIcon(os.path.join(image_location, 'arrow-circle-315.png')),
             "Reload",
             "Reload page",
             slot
@@ -54,7 +59,7 @@ class ButtonProvider:
     
     def get_home_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'home.png')),
+            QIcon(os.path.join(image_location, 'home.png')),
             "Home",
             "Go to Home page",
             slot
@@ -62,7 +67,7 @@ class ButtonProvider:
     
     def get_stop_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'cross-circle.png')),
+            QIcon(os.path.join(image_location, 'cross-circle.png')),
             "Stop",
             "Stop loading page",
             slot
@@ -70,7 +75,7 @@ class ButtonProvider:
     
     def get_ntab_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'ui-tab--plus.png')),
+            QIcon(os.path.join(image_location, 'ui-tab--plus.png')),
             "New Tab",
             "Open a new tab",
             slot
@@ -78,7 +83,7 @@ class ButtonProvider:
     
     def get_ofile_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'disk--arrow.png')),
+            QIcon(os.path.join(image_location, 'disk--arrow.png')),
             "Open File",
             "Open from file",
             slot
@@ -86,7 +91,7 @@ class ButtonProvider:
     
     def get_save_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'disk--pencil.png')),
+            QIcon(os.path.join(image_location, 'disk--pencil.png')),
             "Save Page As...",
             "Save current page to file",
             slot
@@ -94,7 +99,7 @@ class ButtonProvider:
     
     def get_print_button(self, slot=None):
         return self.get_button(
-            QIcon(os.path.join('../images', 'printer.png')),
+            QIcon(os.path.join(image_location, 'printer.png')),
             "Print",
             "Print current page",
             slot
