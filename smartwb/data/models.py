@@ -51,7 +51,8 @@ class SavedPassword(BaseModel):
 
 
 class History(BaseModel):
-    user = ForeignKeyField(User, backref="history")
+    user = ForeignKeyField(User, backref="history", null=True)
+    title = CharField()
     site = CharField()
     visit_date = DateTimeField(default=datetime.datetime.now)
 
@@ -67,7 +68,7 @@ class History(BaseModel):
 
 
 class SavedPage(BaseModel):
-    user = ForeignKeyField(User, backref="saved_pages")
+    user = ForeignKeyField(User, backref="saved_pages", null=True)
     title = CharField()
     url = CharField()
 

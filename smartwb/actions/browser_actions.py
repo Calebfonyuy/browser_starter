@@ -5,8 +5,10 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from PyQt5.QtPrintSupport import *
 
-#from .. import settings
+from data.models import *
+
 
 class BrowserProvider:
     """
@@ -55,6 +57,7 @@ class BrowserProvider:
     def __update_load_finished(self, index, browser):
         self.__tabview.setTabText(index, browser.page().title())
         self.__update_window_title(browser.page().title())
+        History.create(site=browser.url().toString(),title=browser.page().title())
 
     def __update_url_bar(self, url, browser):
         if browser != self.__tabview.currentWidget():
