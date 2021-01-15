@@ -1,63 +1,19 @@
 import json
+import datetime
+from peewee import *
+
+db = SqliteDatabase('./database/smartwbdb.sqlite3')
+
+class BaseModel(Model):
+    class Meta:
+        database = db
 
 
-class Preference:
-    """
-    This class represents the user preferences on the browser.
-    It is basically made up of the preference reference and the value
-    """
-    def __init__(self, ref_name, value):
-        if ref_name is None or len(str(ref_name))<2:
-            raise Exception("Invalid reference name. Reference name should be at least two characters long")
-        
-        if value is None:
-            value = ""
-            
-        self.ref_name = ref_name
-        self.value = value
-        
-    def serialize(self):
-        data = {
-            "ref_name": self.ref_name,
-            "value": self.value
-        }
-        return json.dumps(data)
-
-
-class SitePreference(Preference):
-    """
-    Settings for sites
-    """
-    def __init__(self, ref_name, value, site):
-        if site is None or type(site) is not str:
-            raise Exception("site attribute must be a string")
-        
-        self.super(ref_name, value)
-        self.url = url
-
-    def serialize(self):
-        data = {
-            "site": self.site,
-            "ref_name": self.ref_name,
-            "value": self.value
-        }
-        return json.dumps(data)
-        
-
-class User:
-    def __init__(self, email, name, surname="", contact="", prefs=[]):
-        if type(prefs) is not list:
-            raise Exception("prefs attribute must be a list of preferences")
-        
-        for item in prefs:
-            if type(item) is not Preference:
-                raise Exception(str(item) + " is not an instance of Preference")
-        
-        self.name = name
-        self.surname = surname
-        self.email = email
-        self.contact = contact
-        self.prefs = prefs
+class User(BaseModel):
+    name = CharField()
+    surname = CharField(null=True)
+    email = CharField()
+    contact = CharField(null=True)
         
     def __str__(self):
         return self.name+" "+self.surname
@@ -75,11 +31,12 @@ class User:
         return json.dumps(self.get_json())
 
 
-class SavedPassword:
-    def __init__(self, site, username, password):
-        self.site = site
-        self.username = username
-        self.password = password
+class SavedPassword(BaseModel):
+    user = ForeignKeyField(User, backref="passwords")
+    site = CharField()
+    username = CharField()
+    password = CharField()
+    created_at = DateTimeField(default=datetime.datetime.now)
     
     def get_json(self):
         obj = {
@@ -93,10 +50,10 @@ class SavedPassword:
         return json.dumps(self.get_json())
 
 
-class History:
-    def __init__(self, site, visit_date):
-        self.site = site
-        self.visit_date = visit_date
+class History(BaseModel):
+    user = ForeignKeyField(User, backref="history")
+    site = CharField()
+    visit_date = DateTimeField(default=datetime.datetime.now)
 
     def get_json(self):
         obj = {
@@ -109,10 +66,10 @@ class History:
         return json.dumps(self.get_json())
 
 
-class SavedSite:
-    def __init__(self, title, url):
-        self.title = title
-        self.url = url
+class SavedPage(BaseModel):
+    user = ForeignKeyField(User, backref="saved_pages")
+    title = CharField()
+    url = CharField()
 
     def get_json(self):
         obj = {
@@ -125,14 +82,12 @@ class SavedSite:
         return json.dumps(self.get_json())
 
 
-class Favourite(SavedSite):
+class Favourite(SavedPage):
     pass
 
 
-class Bookmark(SavedSite):
-    def __init__(self, title, url, folder):
-        super().__init__(title, url)
-        self.folder = folder
+class Bookmark(SavedPage):
+    folder = CharField()
     
     def get_json(self):
         obj = super().get_json()
@@ -160,5 +115,4 @@ class SettingProvider:
 
 
 if __name__=="__main__":
-    item = Bookmark("hello","hello","hello")
-    print(item.serialize())
+    db.create_tables([User, SavedPassword, History, Favourite, Bookmark])
