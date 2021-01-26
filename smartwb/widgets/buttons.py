@@ -104,3 +104,115 @@ class ButtonProvider:
             "Print current page",
             slot
         )
+
+    def get_help_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'question.png')),
+            "Help",
+            "Help topics on using browser",
+            slot
+        )
+
+    def get_about_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'lifebuoy.png')),
+            "About SmartWB",
+            "Know about SmartWB",
+            slot
+        )
+
+    def get_bookmark_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'bookmark.png')),
+            "Bookmark Page",
+            "Add this page to list of bookmarks",
+            slot
+        )
+
+    def get_list_bookmark_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'bookmark.png')),
+            "All Bookmarks",
+            "List of all bookmarks",
+            slot
+        )
+
+    def get_user_bookmark_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'bookmark.png')),
+            "All Personal Bookmarks",
+            "List of all personal bookmarks",
+            slot
+        )
+
+    def get_bookmark_folder_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'folder.png')),
+            "Bookmarks Folder",
+            "Bookmarks folder",
+            slot
+        )
+
+    def get_history_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'history.png')),
+            "History",
+            "View browsing history",
+            slot
+        )
+
+    def get_add_favorites_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'favorite.png')),
+            "Add to Favourites",
+            "Add site to list of favourite sites",
+            slot
+        )
+
+    def get_favorites_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'favorite.png')),
+            "Favourites",
+            "List of favourite sites",
+            slot
+        )
+
+    def get_settings_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'settings.png')),
+            "Settings",
+            "Personnalize browser",
+            slot
+        )
+
+    def get_user_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'user.png')),
+            "Manage User",
+            "Display user information",
+            slot
+        )
+
+    def get_login_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'login.png')),
+            "Login User",
+            "Login User",
+            slot
+        )
+
+    def get_logout_button(self, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'logout.png')),
+            "Logout User",
+            "Logout User",
+            slot
+        )
+
+    def get_custom_folder_button(self, title, slot=None):
+        return self.get_button(
+            QIcon(os.path.join(image_location, 'folder.png')),
+            title,
+            title,
+            slot
+        )

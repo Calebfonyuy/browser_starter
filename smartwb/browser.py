@@ -5,6 +5,7 @@ from PyQt5.QtWebEngineWidgets import *
 from PyQt5.QtPrintSupport import *
 
 from widgets.buttons import ButtonProvider
+from widgets.menus import MenuProvider
 from actions.browser_actions import *
 
 import os
@@ -58,19 +59,8 @@ class MainWindow(QMainWindow):
         # Uncomment to disable native menubar on Mac
         # self.menuBar().setNativeMenuBar(False)
 
-        file_menu = self.menuBar().addMenu("&File")
-
-        new_tab_action = btn_source.get_ntab_button(bprovider.create_new_tab)
-        file_menu.addAction(new_tab_action)
-
-        open_file_action = btn_source.get_ofile_button(cprovider.open_file)
-        file_menu.addAction(open_file_action)
-
-        save_file_action = btn_source.get_save_button(cprovider.save_file)
-        file_menu.addAction(save_file_action)
-
-        print_action = btn_source.get_print_button(cprovider.print_page)
-        file_menu.addAction(print_action)
+        menu_source = MenuProvider(bprovider, cprovider, self.menuBar(), self)
+        menu_source.create_all_menus()
 
         self.setWindowIcon(QIcon(os.path.join('images', 'ma-icon-64.png')))
 

@@ -8,6 +8,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtPrintSupport import *
 
 from data.models import *
+from widgets.windows import *
 
 
 class BrowserProvider:
@@ -24,7 +25,7 @@ class BrowserProvider:
 
         self.__window = window
         self.__urlbar = urlbar
-        self.__urlbar.returnPressed.connect(lambda : self.navigate_to_url(self.urlbar.text()))
+        self.__urlbar.returnPressed.connect(lambda : self.navigate_to_url(self.__urlbar.text()))
         self.__create_tab_widget()
         self.create_new_tab(QUrl('http://www.google.com'), 'Homepage')
     
@@ -55,9 +56,16 @@ class BrowserProvider:
         browser.loadFinished.connect(lambda : self.__update_load_finished(index, browser))
 
     def __update_load_finished(self, index, browser):
-        self.__tabview.setTabText(index, browser.page().title())
+        if len(browser.page().title()) > 25:
+            tabtext = browser.page().title()[:30]+"..."
+        else:
+            tabtext = browser.page().title()
+        self.__tabview.setTabText(index, tabtext)
         self.__update_window_title(browser.page().title())
-        History.create(site=browser.url().toString(),title=browser.page().title())
+        try:
+            tabtext.index("about:blank")
+        except Exception:
+            History.create(site=browser.url().toString(),title=browser.page().title())
 
     def __update_url_bar(self, url, browser):
         if browser != self.__tabview.currentWidget():
@@ -137,6 +145,18 @@ class BrowserProvider:
         dlg.paintRequested.connect(self.tabview.currentWidget().print_)
         dlg.exec_()
 
+    def bookmark_page(self):
+        browser = self.__tabview.currentWidget()
+        url = browser.url().toString()
+        title = browser.page().title()
+        # TODO: Bookmark folder management
+        Bookmark.create(url=url, title=title, folder="general")
+
+    def add_favourite_page(self):
+        browser = self.__tabview.currentWidget()
+        url = browser.url().toString()
+        title = browser.page().title()
+        Favourite.create(url=url, title=title)
 
 
 class ControlProvider:
@@ -155,14 +175,16 @@ class ControlProvider:
         self.__bprovider = browser_provider
 
     def open_file(self):
-        filename, _ = filename, _ = QFileDialog.getOpenFileName(self.window, "Open file", "",
+        filename, _ = filename, _ = QFileDialog.getOpenFileName(self.__window, "Open file", "",
                                                   "Hypertext Markup Language (*.htm *.html);;"
                                                   "All files (*.*)")
 
     def save_file(self, file_data):
-        filename, _ = QFileDialog.getSaveFileName(self.window, "Save Page As", "",
+        filename, _ = QFileDialog.getSaveFileName(self.__window, "Save Page As", "",
                                                   "Hypertext Markup Language (*.htm *html);;"
                                                   "All files (*.*)")
+        if not filename:
+            return
         with open(filename, 'w') as f:
             f.write(file_data.encode('utf8'))    
 
@@ -171,3 +193,17 @@ class ControlProvider:
         dlg.paintRequested.connect(self.__bprovider.get_current_browser().print_)
         dlg.exec_()
 
+    def show_history(self):
+        hist = History.select().order_by(History.visit_date.desc())
+        self.hist_window = get_list_window(hist, "History", "Browser history")
+        self.hist_window.show()
+
+    def show_bookmarks(self):
+        bmks = Bookmark.select().order_by(Bookmark.title.asc())
+        self.bmk_window = get_list_window(bmks, "Bookmarks", "List of Bookmarks")
+        self.bmk_window.show()
+
+    def show_favourites(self):
+        favs = Favourite.select().order_by(Favourite.title.desc())
+        self.fav_window = get_list_window(favs, "Favourites", "Favourite sites")
+        self.fav_window.show()

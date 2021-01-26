@@ -66,6 +66,10 @@ class History(BaseModel):
     def serialize(self):
         return json.dumps(self.get_json())
 
+    def __str__(self):
+        return self.title+"("+self.site+")"+", "+str(self.visit_date)
+    
+
 
 class SavedPage(BaseModel):
     user = ForeignKeyField(User, backref="saved_pages", null=True)
@@ -81,6 +85,10 @@ class SavedPage(BaseModel):
     
     def serialize(self):
         return json.dumps(self.get_json())
+
+    def __str__(self):
+        return self.title+"("+self.url+")"
+    
 
 
 class Favourite(SavedPage):
